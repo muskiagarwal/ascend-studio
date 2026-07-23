@@ -1,0 +1,82 @@
+name: Write editions and publish
+
+# The API key lives here, as a repository secret, and never reaches the site:
+# Settings > Secrets and variables > Actions > New repository secret
+#   Name:  ANTHROPIC_API_KEY
+#
+# Writing is incremental. An idea that already has an edition is skipped, so a
+# normal push costs nothing. Use the "force" input to rewrite everything.
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Rewrite every edition, even ones that already exist'
+        type: boolean
+        default: false
+      only:
+        description: 'Comma-separated idea ids to write (blank = all missing)'
+        type: string
+        default: ''
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Write any missing editions
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not set, so no new editions were written. Existing ones still publish."
+            exit 0
+          fi
+          node scripts/write-editions.mjs \
+            ${{ inputs.force && '--force' || '' }} \
+            ${{ inputs.only && format('--only={0}', inputs.only) || '' }}
+
+      - name: Commit any new editions
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain src/data/generated)" ]; then
+            git add src/data/generated
+            git commit -m "Write new Ascend editions [skip ci]"
+            git push
+          else
+            echo "No new editions to commit."
+          fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to gh-pages
+        run: |
+          touch dist/.nojekyll
+          cd dist
+          git init -q -b gh-pages
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${{ github.sha }}"
+          git push -q --force \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            gh-pages

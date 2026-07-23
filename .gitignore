@@ -1,0 +1,10 @@
+node_modules
+dist
+.DS_Store
+*.local
+.vite
+images-src/*.svg
+
+# local secrets
+.env
+.env.local

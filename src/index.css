@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Virgil — the Excalidraw handwriting font, so on-page accents match the
+   illustrations exactly. Bundled locally (public/fonts). */
+@font-face {
+  font-family: 'Virgil';
+  src: url('./fonts/Virgil.ttf') format('truetype');
+  font-weight: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-paper text-ink font-body antialiased;
+  /* Faint dot-grid, like a whiteboard */
+  background-image: radial-gradient(rgba(30, 30, 30, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+::selection {
+  background: #ffec99;
+  color: #1e1e1e;
+}
+
+/* Marker highlight used behind key phrases, like R.highlight in the images */
+.mark {
+  background: linear-gradient(180deg, transparent 58%, #ffec99 58%, #ffec99 92%, transparent 92%);
+  padding: 0 0.08em;
+}
+
+/* Hand-drawn wobble border via a rough SVG stroke, tiled as border-image.
+   Gives cards the same "drawn twice, corners miss" feel as the art. */
+.sketch {
+  border: 2.5px solid #1e1e1e;
+  border-radius: 14px 12px 15px 11px / 12px 15px 11px 14px;
+}
+.sketch-soft {
+  border: 2px solid #1e1e1e;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
+/* Thin scrollbar for the article reader */
+.reader::-webkit-scrollbar {
+  width: 10px;
+}
+.reader::-webkit-scrollbar-thumb {
+  background: #e7e3d8;
+  border-radius: 999px;
+}
+
+/* Article body typography */
+.prose-ascend p {
+  @apply text-[1.03rem] leading-[1.75] text-ink/90 mb-4;
+}
+.prose-ascend .lead {
+  @apply font-semibold text-ink;
+}
+.prose-ascend h3 {
+  @apply font-hand text-2xl text-ink mt-8 mb-2;
+}
+.prose-ascend a {
+  @apply text-sky underline decoration-sky/40 underline-offset-2 hover:decoration-sky;
+}
+.prose-ascend .opener {
+  @apply italic text-ink/70 text-[0.98rem] leading-relaxed;
+}
